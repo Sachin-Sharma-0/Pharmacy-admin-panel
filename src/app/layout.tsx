@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
+import { pacifico, poppins } from './fonts';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -44,6 +45,19 @@ export default function RootLayout({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Listen for custom event to expand sidebar when a tab with subtabs is clicked
+  useEffect(() => {
+    const handleExpandSidebar = () => {
+      if (sidebarCollapsed) {
+        setSidebarCollapsed(false);
+      }
+    };
+
+    document.addEventListener('expand-sidebar', handleExpandSidebar);
+    
+    return () => document.removeEventListener('expand-sidebar', handleExpandSidebar);
+  }, [sidebarCollapsed]);
+
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
@@ -51,10 +65,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        {/* No need for external font link as we're using Next.js font loading */}
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-['Montserrat',sans-serif] antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${pacifico.variable} font-poppins antialiased`}
       >
         <div className="flex h-screen overflow-hidden bg-gray-50">
           {/* Mobile sidebar backdrop */}
@@ -86,13 +100,13 @@ export default function RootLayout({
               <div className="flex items-center justify-between px-4 py-6">
                 {!sidebarCollapsed && (
                   <div>
-                    <h1 className="text-2xl font-bold text-white">BrandName</h1>
+                    <h1 className="text-2xl font-pacifico text-[#41AFFF]">Oraglan</h1>
                     <p className="text-sm text-white opacity-80">Admin Panel</p>
                   </div>
                 )}
                 {sidebarCollapsed && (
                   <div className="mx-auto">
-                    <span className="text-2xl font-bold">B</span>
+                    <span className="text-2xl font-pacifico text-[#41AFFF]">S</span>
                   </div>
                 )}
                 <button 

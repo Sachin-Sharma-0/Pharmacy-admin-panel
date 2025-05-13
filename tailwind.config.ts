@@ -36,8 +36,16 @@ const config: Config = {
           950: '#2e1065',
         },
       },
+      fontFamily: {
+        'poppins': ['var(--font-poppins)', 'sans-serif'],
+        'pacifico': ['var(--font-pacifico)', 'cursive'],
+      },
       boxShadow: {
         'card': '0 2px 5px 0 rgba(0,0,0,0.05)',
+      },
+      zIndex: {
+        '60': '60',
+        '70': '70',
       },
     },
   },

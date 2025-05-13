@@ -155,7 +155,7 @@ export default function UserProfile() {
                 <div className="relative">
                   <img
                     className="h-24 w-24 rounded-full object-cover border-4 border-primary-100"
-                    src={userData.avatar || 'https://via.placeholder.com/150'}
+                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                     alt="User avatar"
                   />
                   <span className="absolute inset-0 rounded-full shadow-inner" aria-hidden="true"></span>
