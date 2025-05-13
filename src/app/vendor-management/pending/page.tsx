@@ -55,17 +55,9 @@ export default function PendingVendors() {
   return (
     <div className="space-y-6">
       <div className="sm:flex sm:items-center sm:justify-between">
-        <div className="flex items-center space-x-4">
-          <Link
-            href="/vendor-management"
-            className="text-gray-400 hover:text-gray-500"
-          >
-            <ArrowLeftIcon className="h-5 w-5" aria-hidden="true" />
-          </Link>
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">Pending Approval Vendors</h1>
-            <p className="mt-2 text-sm text-gray-700">A list of all vendors waiting for approval.</p>
-          </div>
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900">Pending Approval Vendors</h1>
+          <p className="mt-2 text-sm text-gray-700">A list of all vendors waiting for approval.</p>
         </div>
       </div>
 

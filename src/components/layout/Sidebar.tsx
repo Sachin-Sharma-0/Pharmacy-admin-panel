@@ -132,16 +132,16 @@ export default function Sidebar({ collapsed = false }: SidebarProps) {
         {/* Main navigation item */}
         {hasSubItems ? (
           <div 
-            className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md transition-colors duration-150 ease-in-out cursor-pointer
+            className={`group flex items-center justify-between px-2 py-2 text-sm rounded-md transition-colors duration-150 ease-in-out cursor-pointer
               ${isActive 
-                ? 'bg-primary-800 text-white' 
-                : 'text-white hover:bg-primary-700 hover:text-white'}
+                ? 'bg-[#41AFFF] text-white font-medium' 
+                : 'text-black hover:bg-gray-100 hover:text-black'}
             `}
             onClick={() => toggleExpand(item.name, item)}
           >
             <div className="flex items-center">
               <item.icon 
-                className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-white opacity-80 group-hover:opacity-100'}`} 
+                className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-black opacity-80 group-hover:opacity-100'}`} 
                 aria-hidden="true" 
               />
               {!collapsed && (
@@ -155,9 +155,9 @@ export default function Sidebar({ collapsed = false }: SidebarProps) {
             {!collapsed && (
               <div className="flex items-center">
                 {isExpanded ? (
-                  <ChevronDownIcon className="h-4 w-4 text-white" />
+                  <ChevronDownIcon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-black'}`} />
                 ) : (
-                  <ChevronRightIcon className="h-4 w-4 text-white" />
+                  <ChevronRightIcon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-black'}`} />
                 )}
               </div>
             )}
@@ -165,15 +165,15 @@ export default function Sidebar({ collapsed = false }: SidebarProps) {
         ) : (
           <Link
             href={item.href}
-            className={`group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md transition-colors duration-150 ease-in-out
+            className={`group flex items-center justify-between px-2 py-2 text-sm rounded-md transition-colors duration-150 ease-in-out
               ${isActive 
-                ? 'bg-primary-800 text-white' 
-                : 'text-white hover:bg-primary-700 hover:text-white'}
+                ? 'bg-[#41AFFF] text-white font-medium' 
+                : 'text-black hover:bg-gray-100 hover:text-black'}
             `}
           >
             <div className="flex items-center">
               <item.icon 
-                className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-white opacity-80 group-hover:opacity-100'}`} 
+                className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-black opacity-80 group-hover:opacity-100'}`} 
                 aria-hidden="true" 
               />
               {!collapsed && (
@@ -197,11 +197,11 @@ export default function Sidebar({ collapsed = false }: SidebarProps) {
                   href={subItem.href}
                   className={`flex items-center px-2 py-1.5 text-sm rounded-md transition-colors duration-150 ease-in-out
                     ${isSubActive 
-                      ? 'bg-primary-700 text-white' 
-                      : 'text-white opacity-80 hover:bg-primary-700 hover:opacity-100'}
+                      ? 'bg-[#41AFFF] text-white font-medium' 
+                      : 'text-black opacity-80 hover:bg-gray-100 hover:opacity-100'}
                   `}
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-white opacity-70 mr-2"></div>
+                  <div className={`w-1.5 h-1.5 rounded-full ${isSubActive ? 'bg-white' : 'bg-black opacity-70'} mr-2`}></div>
                   <span>{subItem.name}</span>
                 </Link>
               );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   PencilIcon, 
   NoSymbolIcon,
@@ -66,6 +66,21 @@ const statusOptions: StatusOption[] = [
 export default function VendorManagement() {
   const [vendors, setVendors] = useState<Vendor[]>(initialVendors);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState<number | null>(null);
+  
+  // Add click outside listener to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (statusDropdownOpen !== null) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.status-dropdown-container')) {
+          setStatusDropdownOpen(null);
+        }
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [statusDropdownOpen]);
 
   // Format date to a more readable format
   const formatDate = (dateString: string): string => {
@@ -162,7 +177,7 @@ export default function VendorManagement() {
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         <div className="flex items-center space-x-4">
                           {/* Status Dropdown */}
-                          <div className="relative">
+                          <div className="relative status-dropdown-container">
                             <button
                               onClick={() => setStatusDropdownOpen(statusDropdownOpen === vendor.id ? null : vendor.id)}
                               className={`inline-flex items-center rounded-full px-3 py-0.5 text-sm font-medium ${getStatusColorClass(vendor.status)}`}
@@ -171,7 +186,7 @@ export default function VendorManagement() {
                               <ChevronDownIcon className="ml-1 h-4 w-4" />
                             </button>
                             {statusDropdownOpen === vendor.id && (
-                              <div className="absolute z-10 mt-1 w-40 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                              <div className="fixed z-50 mt-1 w-40 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5" style={{maxHeight: '200px', overflow: 'auto'}}>
                                 <div className="py-1" role="menu">
                                   {statusOptions.map((option) => (
                                     <button

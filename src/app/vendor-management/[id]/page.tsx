@@ -192,7 +192,7 @@ export default function VendorDetail() {
               <button
                 form="vendor-form"
                 type="submit"
-                className="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:w-auto"
+                className="inline-flex items-center justify-center rounded-md border border-transparent bg-[#41AFFF] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#3a9ee6] focus:outline-none focus:ring-2 focus:ring-[#41AFFF] focus:ring-offset-2 sm:w-auto"
               >
                 Save Changes
               </button>
@@ -201,7 +201,7 @@ export default function VendorDetail() {
             <button
               type="button"
               onClick={() => setEditMode(true)}
-              className="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:w-auto"
+              className="inline-flex items-center justify-center rounded-md border border-transparent bg-[#41AFFF] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#3a9ee6] focus:outline-none focus:ring-2 focus:ring-[#41AFFF] focus:ring-offset-2 sm:w-auto"
             >
               Edit Details
             </button>

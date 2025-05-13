@@ -203,7 +203,7 @@ export default function ManageAdmins() {
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         <span
-                          className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${admin.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                          className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${admin.status === 'active' ? 'bg-[#41AFFF]/20 text-[#41AFFF]' : 'bg-red-100 text-red-800'}`}
                         >
                           {admin.status === 'active' ? 'Active' : 'Disabled'}
                         </span>

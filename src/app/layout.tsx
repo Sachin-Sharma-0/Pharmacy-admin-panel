@@ -81,7 +81,7 @@ export default function RootLayout({
           <div 
             className={`fixed inset-y-0 left-0 z-40 w-full max-w-xs transform transition md:relative md:translate-x-0 md:flex-shrink-0 ${sidebarOpen ? 'translate-x-0 ease-out duration-300' : '-translate-x-full ease-in duration-200'} ${sidebarCollapsed ? 'md:w-16' : 'md:w-56'}`}
           >
-            <div className="relative flex h-full flex-col overflow-y-auto bg-slate-800 text-white shadow-xl">
+            <div className="relative flex h-full flex-col overflow-y-auto bg-white shadow-xl">
               {/* Close button for mobile */}
               <div className="absolute top-0 right-0 -mr-12 pt-2 md:hidden z-50">
                 <button
@@ -101,12 +101,12 @@ export default function RootLayout({
                 {!sidebarCollapsed && (
                   <div>
                     <h1 className="text-2xl font-pacifico text-[#41AFFF]">Oraglan</h1>
-                    <p className="text-sm text-white opacity-80">Admin Panel</p>
+                    <p className="text-sm text-black">Admin Panel</p>
                   </div>
                 )}
                 {sidebarCollapsed && (
                   <div className="mx-auto">
-                    <span className="text-2xl font-pacifico text-[#41AFFF]">S</span>
+                    <span className="text-2xl font-pacifico text-[#41AFFF]">O</span>
                   </div>
                 )}
                 <button 

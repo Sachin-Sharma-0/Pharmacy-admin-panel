@@ -184,7 +184,7 @@ export default function AdminManagement() {
           <button
             type="button"
             onClick={openCreateModal}
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:w-auto"
+            className="inline-flex items-center justify-center rounded-md border border-transparent bg-[#41AFFF] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#3a9ee6] focus:outline-none focus:ring-2 focus:ring-[#41AFFF] focus:ring-offset-2 sm:w-auto"
           >
             <PlusIcon className="-ml-1 mr-2 h-4 w-4" aria-hidden="true" />
             Add Admin
@@ -228,7 +228,7 @@ export default function AdminManagement() {
                         {admin.permissionRole}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm">
-                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${admin.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${admin.status === 'active' ? 'bg-[#41AFFF]/20 text-[#41AFFF]' : 'bg-red-100 text-red-800'}`}>
                           {admin.status === 'active' ? 'Active' : 'Disabled'}
                         </span>
                       </td>
@@ -237,7 +237,7 @@ export default function AdminManagement() {
                           {/* Update button */}
                           <button
                             onClick={() => openUpdateModal(admin)}
-                            className="text-primary-600 hover:text-primary-900"
+                            className="text-[#41AFFF] hover:text-[#3a9ee6]"
                           >
                             <PencilIcon className="h-5 w-5" aria-hidden="true" />
                           </button>
@@ -245,7 +245,7 @@ export default function AdminManagement() {
                           {/* Enable/Disable button */}
                           <button
                             onClick={() => toggleAdminStatus(admin.id)}
-                            className={`${admin.status === 'disabled' ? 'text-green-600 hover:text-green-900' : 'text-red-600 hover:text-red-900'}`}
+                            className={`${admin.status === 'disabled' ? 'text-[#41AFFF] hover:text-[#3a9ee6]' : 'text-red-600 hover:text-red-900'}`}
                           >
                             {admin.status === 'disabled' ? 'Enable' : 'Disable'}
                           </button>
@@ -270,13 +270,13 @@ export default function AdminManagement() {
 
       {/* Add/Edit Admin Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-10 overflow-y-auto">
+        <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-screen items-end justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={closeModal}></div>
 
             <span className="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
 
-            <div className="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle">
+            <div className="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle z-50 relative">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
@@ -305,7 +305,7 @@ export default function AdminManagement() {
                           value={formData.name}
                           onChange={handleInputChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#41AFFF] focus:ring-[#41AFFF] sm:text-sm py-2"
                         />
                       </div>
                       
@@ -320,7 +320,7 @@ export default function AdminManagement() {
                           value={formData.email}
                           onChange={handleInputChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#41AFFF] focus:ring-[#41AFFF] sm:text-sm py-2"
                         />
                       </div>
                       
@@ -335,7 +335,7 @@ export default function AdminManagement() {
                           value={formData.phone}
                           onChange={handleInputChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#41AFFF] focus:ring-[#41AFFF] sm:text-sm py-2"
                         />
                       </div>
                       
@@ -350,7 +350,7 @@ export default function AdminManagement() {
                           value={formData.password}
                           onChange={handleInputChange}
                           required={!currentAdmin}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#41AFFF] focus:ring-[#41AFFF] sm:text-sm py-2"
                         />
                       </div>
                       
@@ -364,7 +364,7 @@ export default function AdminManagement() {
                           value={formData.permissionRole}
                           onChange={handleInputChange}
                           required
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#41AFFF] focus:ring-[#41AFFF] sm:text-sm py-2"
                         >
                           <option value="">Select a role</option>
                           {permissionRoles.map(role => (
@@ -376,14 +376,14 @@ export default function AdminManagement() {
                       <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                         <button
                           type="submit"
-                          className="inline-flex w-full justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+                          className="inline-flex w-full justify-center rounded-md border border-transparent bg-[#41AFFF] px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-[#3a9ee6] focus:outline-none focus:ring-2 focus:ring-[#41AFFF] focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
                         >
                           {currentAdmin ? 'Update' : 'Create'}
                         </button>
                         <button
                           type="button"
                           onClick={closeModal}
-                          className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
+                          className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#41AFFF] focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
                         >
                           Cancel
                         </button>

@@ -90,7 +90,7 @@ export default function PermissionRoles() {
         <div className="mt-4 sm:mt-0">
           <Link
             href="/admin-management/create-permissions"
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:w-auto"
+            className="inline-flex items-center justify-center rounded-md border border-transparent bg-[#41AFFF] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#3a9ee6] focus:outline-none focus:ring-2 focus:ring-[#41AFFF] focus:ring-offset-2 sm:w-auto"
           >
             Create New Permission
           </Link>
@@ -122,7 +122,7 @@ export default function PermissionRoles() {
                         {profile.name}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${profile.type === 'edit' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
+                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${profile.type === 'edit' ? 'bg-[#41AFFF]/20 text-[#41AFFF]' : 'bg-green-100 text-green-800'}`}>
                           {profile.type === 'edit' ? 'Edit' : 'View'}
                         </span>
                       </td>
@@ -134,7 +134,7 @@ export default function PermissionRoles() {
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         <Link
                           href={`/admin-management/create-permissions?id=${profile.id}`}
-                          className="text-primary-600 hover:text-primary-900"
+                          className="text-[#41AFFF] hover:text-[#3a9ee6]"
                         >
                           <PencilIcon className="h-5 w-5" aria-hidden="true" />
                         </Link>

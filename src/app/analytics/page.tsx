@@ -175,7 +175,7 @@ export default function AnalyticsPage() {
           ].map((metric) => (
             <div key={metric.name} className="bg-gray-50 overflow-hidden rounded-lg p-5">
               <dt className="text-sm font-medium text-gray-500 truncate">{metric.name}</dt>
-              <dd className="mt-1 text-3xl font-semibold text-gray-900">{metric.value}</dd>
+              <dd className="mt-1 text-4xl font-semibold text-gray-900">{metric.value}</dd>
               <dd className="mt-2">
                 <span className={`text-sm ${metric.changeType === 'increase' ? 'text-green-600' : 'text-red-600'}`}>
                   {metric.change}
