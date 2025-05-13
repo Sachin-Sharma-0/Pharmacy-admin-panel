@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 // Define interfaces for type safety
@@ -49,7 +49,8 @@ const initialPermissionProfiles: Permission[] = [
   // ... other profiles
 ];
 
-export default function CreatePermissions() {
+// Component that uses useSearchParams wrapped in Suspense
+function PermissionsForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const profileId = searchParams.get('id');
@@ -242,5 +243,14 @@ export default function CreatePermissions() {
         </div>
       </form>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function CreatePermissions() {
+  return (
+    <Suspense fallback={<div className="p-4">Loading permissions...</div>}>
+      <PermissionsForm />
+    </Suspense>
   );
 }
