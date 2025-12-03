@@ -15,9 +15,7 @@ import {
   UserCircleIcon,
   ShieldCheckIcon,
   TicketIcon,
-  BanknotesIcon,
-  ChevronDownIcon,
-  ChevronRightIcon
+  BanknotesIcon
 } from '@heroicons/react/24/outline';
 
 // Define navigation items with support for nested sub-items
@@ -41,36 +39,62 @@ const navigation = [
       { name: 'All Vendors', href: '/vendor-management' },
       { name: 'Pending Approval', href: '/vendor-management/pending' },
       { name: 'Approved Vendors', href: '/vendor-management/approved' },
-      { name: 'Suspended Vendors', href: '/vendor-management/suspended' }
+      { name: 'On Hold', href: '/vendor-management/on-hold' },
+      { name: 'Rejected Vendors', href: '/vendor-management/rejected' }
+    ]
+  },
+  { 
+    name: 'Prescription', 
+    href: '/prescription', 
+    icon: ClipboardDocumentListIcon,
+    subItems: [
+      { name: 'Accepted', href: '/prescription/accepted' },
+      { name: 'Declined', href: '/prescription/declined' },
+      { name: 'Rejected', href: '/prescription/rejected' }
     ]
   },
   { name: 'Products', href: '/products', icon: CubeIcon },
-  { name: 'Inventory', href: '/inventory', icon: ClipboardDocumentListIcon },
   { name: 'Orders', href: '/orders', icon: ShoppingCartIcon },
   { name: 'Customers', href: '/customers', icon: UsersIcon },
   { name: 'Riders', href: '/riders', icon: TruckIcon },
   { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
-  { name: 'Reports', href: '/reports', icon: DocumentChartBarIcon },
   { 
-    name: 'Finance', 
+    name: 'Finance & Accounting', 
     href: '/finance', 
     icon: BanknotesIcon,
     subItems: [
-      { name: 'Revenue', href: '/finance/revenue' },
-      { name: 'Payouts', href: '/finance/payouts' },
-      { name: 'Refunds', href: '/finance/refunds' }
+      { name: 'Vendor Subscriptions', href: '/finance/vendor-subscriptions' },
+      { name: 'Vendor Payouts on Products', href: '/finance/vendor-payouts' },
+      { name: 'Rider Payouts', href: '/finance/rider-payouts' },
+      { name: 'Platform Fees', href: '/finance/platform-fees' }
+    ]
+  },
+  { 
+    name: 'E-commerce Management', 
+    href: '/ecommerce', 
+    icon: ShoppingCartIcon,
+    subItems: [
+      { name: 'Categories', href: '/ecommerce/categories' },
+      { name: 'Coupons', href: '/ecommerce/coupons' }
+    ]
+  },
+  { 
+    name: 'Content Management', 
+    href: '/cms', 
+    icon: DocumentChartBarIcon,
+    subItems: [
+      { name: 'List', href: '/cms/list' },
+      { name: 'Privacy Policy', href: '/cms/privacy-policy' },
+      { name: 'Terms and Conditions', href: '/cms/terms-conditions' },
+      { name: 'About Us', href: '/cms/about-us' },
+      { name: 'FAQ', href: '/cms/faq' },
+      { name: 'Banners', href: '/cms/banners' }
     ]
   },
   { 
     name: 'Customer Service', 
     href: '/customer-service', 
-    icon: TicketIcon,
-    subItems: [
-      { name: 'All Tickets', href: '/customer-service' },
-      { name: 'New Tickets', href: '/customer-service/new' },
-      { name: 'In Progress', href: '/customer-service/in-progress' },
-      { name: 'Resolved', href: '/customer-service/resolved' }
-    ]
+    icon: TicketIcon
   },
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
   { name: 'Profile', href: '/profile', icon: UserCircleIcon },
@@ -91,9 +115,11 @@ export default function Sidebar({ collapsed = false }: SidebarProps) {
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
     'Vendor Management': false,
-    'Customer Service': false,
-    'Finance': false,
-    'Admin Management': false
+    'Finance & Accounting': false,
+    'Admin Management': false,
+    'Prescription': false,
+    'Content Management': false,
+    'E-commerce Management': false
   });
 
   // Check if the current path is within a section to auto-expand that section
@@ -109,21 +135,38 @@ export default function Sidebar({ collapsed = false }: SidebarProps) {
   }, [pathname]);
 
   const toggleExpand = (itemName: string, item: NavigationItem) => {
-    // If sidebar is collapsed and item has subitems, expand the sidebar
-    if (collapsed && item.subItems && item.subItems.length > 0) {
-      // We need to dispatch a custom event to notify the parent component
-      const event = new CustomEvent('expand-sidebar', { detail: { itemName } });
-      document.dispatchEvent(event);
-    }
-    
-    setExpandedItems(prev => ({
-      ...prev,
-      [itemName]: !prev[itemName]
-    }));
+    // Close all other dropdowns when opening a new one
+    setExpandedItems(prev => {
+      const newState = {...prev};
+      
+      // If we're opening this dropdown, close all others
+      if (!prev[itemName]) {
+        Object.keys(newState).forEach(key => {
+          newState[key] = false;
+        });
+      }
+      
+      // Toggle the clicked dropdown
+      newState[itemName] = !prev[itemName];
+      return newState;
+    });
   };
 
+  // Render a navigation item with its subitems if expanded
   const renderNavItem = (item: NavigationItem) => {
-    const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+    // Check if this exact path matches the item's href
+    const isExactMatch = pathname === item.href;
+    // Check if this path is within the section (starts with item's href + '/')
+    const isWithinSection = pathname?.startsWith(item.href + '/');
+    // Check if any of the subitems match the current path
+    const hasSubItemMatch = item.subItems?.some(subItem => pathname === subItem.href || pathname?.startsWith(subItem.href + '/'));
+    // Only highlight the parent if it's an exact match or if it has no subitems
+    // For admin and vendor management, don't highlight the parent if we're on a subpage
+    const isActive = isExactMatch || (isWithinSection && !(item.subItems && item.subItems.length > 0));
+    // Don't highlight the parent item if we're on a subpage for admin or vendor management
+    const isParentActive = (item.name === 'Admin Management' || item.name === 'Vendor Management') 
+      ? isExactMatch 
+      : isActive;
     const hasSubItems = item.subItems && item.subItems.length > 0;
     const isExpanded = expandedItems[item.name];
     
@@ -133,7 +176,7 @@ export default function Sidebar({ collapsed = false }: SidebarProps) {
         {hasSubItems ? (
           <div 
             className={`group flex items-center justify-between px-2 py-2 text-sm rounded-md transition-colors duration-150 ease-in-out cursor-pointer
-              ${isActive 
+              ${isParentActive && !hasSubItemMatch 
                 ? 'bg-[#41AFFF] text-white font-medium' 
                 : 'text-black hover:bg-gray-100 hover:text-black'}
             `}
@@ -141,7 +184,7 @@ export default function Sidebar({ collapsed = false }: SidebarProps) {
           >
             <div className="flex items-center">
               <item.icon 
-                className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-black opacity-80 group-hover:opacity-100'}`} 
+                className={`h-5 w-5 flex-shrink-0 ${isParentActive && !hasSubItemMatch ? 'text-white' : 'text-black opacity-80 group-hover:opacity-100'}`} 
                 aria-hidden="true" 
               />
               {!collapsed && (
@@ -152,28 +195,20 @@ export default function Sidebar({ collapsed = false }: SidebarProps) {
               )}
             </div>
             
-            {!collapsed && (
-              <div className="flex items-center">
-                {isExpanded ? (
-                  <ChevronDownIcon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-black'}`} />
-                ) : (
-                  <ChevronRightIcon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-black'}`} />
-                )}
-              </div>
-            )}
+            {/* Removed chevron icons as per requirements */}
           </div>
         ) : (
           <Link
             href={item.href}
             className={`group flex items-center justify-between px-2 py-2 text-sm rounded-md transition-colors duration-150 ease-in-out
-              ${isActive 
+              ${isParentActive 
                 ? 'bg-[#41AFFF] text-white font-medium' 
                 : 'text-black hover:bg-gray-100 hover:text-black'}
             `}
           >
             <div className="flex items-center">
               <item.icon 
-                className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-black opacity-80 group-hover:opacity-100'}`} 
+                className={`h-5 w-5 flex-shrink-0 ${isParentActive ? 'text-white' : 'text-black opacity-80 group-hover:opacity-100'}`} 
                 aria-hidden="true" 
               />
               {!collapsed && (

@@ -1,6 +1,297 @@
-import React from 'react';
+"use client";
+import React, { useState, useEffect } from 'react';
+import TableSkeleton from '@/components/ui/TableSkeleton';
+import { Rider, RiderFormData } from './types';
+import { API_BASE_URL, getAuthToken } from '@/utils/env';
 
 export default function RidersPage() {
+  const [riders, setRiders] = useState<Rider[]>([]);
+  const [filteredRiders, setFilteredRiders] = useState<Rider[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
+  
+  // Modal states
+  const [showModal, setShowModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showBlockDialog, setShowBlockDialog] = useState(false);
+  const [selectedRider, setSelectedRider] = useState<Rider | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  // Detail modal
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [detailRider, setDetailRider] = useState<any>(null);
+  
+  // Form data
+  const [formData, setFormData] = useState<RiderFormData>({
+    full_name: '',
+    phone_number: '',
+    email: '',
+    vehicle_type: '',
+    license_number: '',
+    status: 'available',
+    is_blocked: false
+  });
+  const [initialFormData, setInitialFormData] = useState<RiderFormData | null>(null);
+
+  useEffect(() => {
+    fetchRiders();
+  }, []);
+
+  useEffect(() => {
+    filterAndSortRiders();
+  }, [riders, searchTerm, statusFilter, sortBy]);
+
+  const fetchRiders = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/api/admin/riders`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch riders');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        const ridersArray = data.data?.riders || data.data || [];
+        const normalized = ridersArray.map((r: any) => ({
+          rider_id: r.rider_id,
+          full_name: r.full_name || '',
+          phone_number: String(r.phone_number ?? ''),
+          email: r.email || '',
+          vehicle_type: r.vehicle_type || '',
+          license_number: r.license_number || '',
+          rating: typeof r.rating === 'number' ? r.rating : (parseFloat(r.rating) || 0),
+          status: r.status || 'offline',
+          is_blocked: Boolean(r.is_blocked),
+          created_at: r.created_at || '',
+          total_deliveries: Number(r.total_deliveries ?? 0),
+        }));
+        setRiders(normalized);
+      } else {
+        throw new Error(data.message || 'Failed to fetch riders');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Error fetching riders:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filterAndSortRiders = () => {
+    const searchLower = searchTerm.toLowerCase();
+    let filtered = riders.filter(rider => {
+      const matchesSearch = (rider.full_name || '').toLowerCase().includes(searchLower) ||
+                           String(rider.phone_number || '').includes(searchTerm) ||
+                           (rider.email || '').toLowerCase().includes(searchLower);
+      
+      const matchesStatus = statusFilter === 'all' || rider.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+
+    // Sort riders
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.full_name.localeCompare(b.full_name);
+        case 'rating':
+          return (b.rating || 0) - (a.rating || 0);
+        case 'experience':
+          return (b.total_deliveries || 0) - (a.total_deliveries || 0);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredRiders(filtered);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+      const url = isEditing ? `${API_BASE_URL}/api/admin/riders/${selectedRider?.rider_id}` : `${API_BASE_URL}/api/rider/create`;
+      const method = isEditing ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to ${isEditing ? 'update' : 'create'} rider`);
+      }
+      
+      await fetchRiders();
+      setShowModal(false);
+      resetForm();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEdit = async (rider: Rider) => {
+    setSelectedRider(rider);
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE_URL}/api/admin/riders/${rider.rider_id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        const rd = data.data?.rider || data.data || rider;
+        const filled: RiderFormData = {
+          full_name: rd.full_name || '',
+          phone_number: String(rd.phone || rd.phone_number || ''),
+          email: rd.email || '',
+          vehicle_type: rd.vehicle_type || '',
+          license_number: rd.license_number || '',
+          status: rd.status || rider.status || 'available',
+          is_blocked: Boolean(rd.is_blocked)
+        };
+        setFormData(filled);
+        setInitialFormData(filled);
+        setIsEditing(true);
+        setShowModal(true);
+        return;
+      }
+    } catch (e) {
+      console.error('Failed to fetch rider details', e);
+    }
+    // Fallback to existing rider data
+    const fallback: RiderFormData = {
+      full_name: rider.full_name,
+      phone_number: rider.phone_number,
+      email: rider.email,
+      vehicle_type: rider.vehicle_type,
+      license_number: rider.license_number,
+      status: rider.status,
+      is_blocked: rider.is_blocked
+    };
+    setFormData(fallback);
+    setInitialFormData(fallback);
+    setIsEditing(true);
+    setShowModal(true);
+  };
+
+  const handleDeleteClick = (rider: Rider) => {
+    setSelectedRider(rider);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedRider) return;
+    
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/api/rider/${selectedRider.rider_id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete rider');
+      }
+      
+      await fetchRiders();
+      setShowDeleteDialog(false);
+      setSelectedRider(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBlockClick = (rider: Rider) => {
+    setSelectedRider(rider);
+    setShowBlockDialog(true);
+  };
+
+  const handleBlock = async () => {
+    if (!selectedRider) return;
+    
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/api/rider/${selectedRider.rider_id}/block`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          is_blocked: !selectedRider.is_blocked
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to ${selectedRider.is_blocked ? 'unblock' : 'block'} rider`);
+      }
+      
+      await fetchRiders();
+      setShowBlockDialog(false);
+      setSelectedRider(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      full_name: '',
+      phone_number: '',
+      email: '',
+      vehicle_type: '',
+      license_number: '',
+      status: 'available',
+      is_blocked: false
+    });
+    setIsEditing(false);
+    setSelectedRider(null);
+  };
+
+  const handleAddRider = () => {
+    resetForm();
+    setShowModal(true);
+  };
+
+  // Remove early spinner; show skeleton in table instead
+
   return (
     <div className="space-y-6">
       <div className="sm:flex sm:items-center sm:justify-between">
@@ -8,12 +299,19 @@ export default function RidersPage() {
         <div className="mt-4 sm:mt-0">
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            onClick={handleAddRider}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#41AFFF] hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Add Rider
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
 
       {/* Search and filters */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -25,27 +323,37 @@ export default function RidersPage() {
           </div>
           <input
             type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="block w-full rounded-md border-0 py-2 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm"
             placeholder="Search riders..."
           />
         </div>
         <div className="flex flex-col sm:flex-row gap-4">
-          <select className="rounded-md border-0 py-2 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-primary-600 sm:text-sm">
-            <option>All Riders</option>
-            <option>Available</option>
-            <option>On Delivery</option>
-            <option>Offline</option>
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-md border-0 py-2 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-primary-600 sm:text-sm"
+          >
+            <option value="all">All Riders</option>
+            <option value="available">Available</option>
+            <option value="on_delivery">On Delivery</option>
+            <option value="offline">Offline</option>
           </select>
-          <select className="rounded-md border-0 py-2 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-primary-600 sm:text-sm">
-            <option>Sort by: Name (A-Z)</option>
-            <option>Sort by: Rating (High to Low)</option>
-            <option>Sort by: Experience</option>
+          <select 
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="rounded-md border-0 py-2 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-primary-600 sm:text-sm"
+          >
+            <option value="name">Sort by: Name (A-Z)</option>
+            <option value="rating">Sort by: Rating (High to Low)</option>
+            <option value="experience">Sort by: Experience</option>
           </select>
         </div>
       </div>
 
       {/* Riders table */}
-      <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+      <div className="overflow-visible shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
         <table className="min-w-full divide-y divide-gray-300">
           <thead className="bg-gray-50">
             <tr>
@@ -60,68 +368,271 @@ export default function RidersPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
-            {[
-              { id: 1, name: 'Alex Johnson', phone: '(123) 456-7890', vehicle: 'Motorcycle', rating: '4.8', status: 'Available' },
-              { id: 2, name: 'Maria Garcia', phone: '(234) 567-8901', vehicle: 'Scooter', rating: '4.7', status: 'On Delivery' },
-              { id: 3, name: 'David Lee', phone: '(345) 678-9012', vehicle: 'Bicycle', rating: '4.5', status: 'Available' },
-              { id: 4, name: 'Sarah Wilson', phone: '(456) 789-0123', vehicle: 'Motorcycle', rating: '4.9', status: 'Offline' },
-              { id: 5, name: 'James Brown', phone: '(567) 890-1234', vehicle: 'Car', rating: '4.6', status: 'On Delivery' },
-            ].map((rider) => (
-              <tr key={rider.id}>
-                <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{rider.name}</td>
-                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{rider.phone}</td>
-                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{rider.vehicle}</td>
-                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{rider.rating}</td>
+            {isLoading ? (
+              <TableSkeleton rows={6} cols={6} />
+            ) : filteredRiders.map((rider) => (
+              <tr
+                key={rider.rider_id}
+                onClick={async (e) => {
+                  if ((e.target as HTMLElement).closest('.action-cell')) return;
+                  try {
+                    const token = getAuthToken();
+                    const res = await fetch(`${API_BASE_URL}/api/admin/riders/${rider.rider_id}`, {
+                      method: 'GET',
+                      headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                      }
+                    });
+                    const data = await res.json();
+                    const rd = data.success ? (data.data?.rider || data.data || rider) : rider;
+                    setDetailRider(rd);
+                    setIsDetailOpen(true);
+                  } catch (err) {
+                    console.error('Failed to get rider details', err);
+                    setDetailRider(rider);
+                    setIsDetailOpen(true);
+                  }
+                }}
+                className="cursor-pointer hover:bg-gray-50"
+              >
+                <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{rider.full_name}</td>
+                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{rider.phone_number}</td>
+                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{rider.vehicle_type}</td>
+                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{Number.isFinite(rider.rating) ? rider.rating.toFixed(1) : 'N/A'}</td>
                 <td className="whitespace-nowrap px-3 py-4 text-sm">
                   <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                    rider.status === 'Available' ? 'bg-green-100 text-green-800' : 
-                    rider.status === 'On Delivery' ? 'bg-blue-100 text-blue-800' : 
+                    rider.status === 'available' ? 'bg-green-100 text-green-800' : 
+                    rider.status === 'on_delivery' ? 'bg-blue-100 text-blue-800' : 
                     'bg-gray-100 text-gray-800'
                   }`}>
-                    {rider.status}
+                    {rider.status === 'available' ? 'Available' : 
+                     rider.status === 'on_delivery' ? 'On Delivery' : 'Offline'}
                   </span>
                 </td>
-                <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                  <a href="#" className="text-primary-600 hover:text-primary-900 mr-4">Edit</a>
-                  <a href="#" className="text-primary-600 hover:text-primary-900">View</a>
-                </td>
-              </tr>
-            ))}
+            <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 action-cell">
+              <button 
+                onClick={(e) => { e.stopPropagation(); handleEdit(rider); }} 
+                className="text-primary-600 hover:text-primary-900 mr-4"
+              >
+                Edit
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); handleBlockClick(rider); }} 
+                className={`${rider.is_blocked ? 'text-green-600 hover:text-green-900' : 'text-red-600 hover:text-red-900'} mr-4`}
+              >
+                {rider.is_blocked ? 'Unblock' : 'Block'}
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); handleDeleteClick(rider); }} 
+                className="text-red-600 hover:text-red-900"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+        ))}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
-        <div className="flex flex-1 justify-between sm:hidden">
-          <a href="#" className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
-          <a href="#" className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
-        </div>
-        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm text-gray-700">
-              Showing <span className="font-medium">1</span> to <span className="font-medium">5</span> of <span className="font-medium">8</span> results
-            </p>
+      {/* Add/Edit Rider Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                {isEditing ? 'Edit Rider' : 'Add New Rider'}
+              </h3>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                  <input
+                    type="text"
+                    name="full_name"
+                    value={formData.full_name}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                  <input
+                    type="tel"
+                    name="phone_number"
+                    value={formData.phone_number}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Vehicle Type</label>
+                  <select
+                    name="vehicle_type"
+                    value={formData.vehicle_type}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Select Vehicle Type</option>
+                    <option value="motorcycle">Motorcycle</option>
+                    <option value="bicycle">Bicycle</option>
+                    <option value="car">Car</option>
+                    <option value="van">Van</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">License Number</label>
+                  <input
+                    type="text"
+                    name="license_number"
+                    value={formData.license_number}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Status</label>
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="available">Available</option>
+                    <option value="on_delivery">On Delivery</option>
+                    <option value="offline">Offline</option>
+                  </select>
+                </div>
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading || (isEditing && initialFormData !== null && JSON.stringify(initialFormData) === JSON.stringify(formData))}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {isLoading ? 'Saving...' : (isEditing ? 'Update' : 'Create')}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-          <div>
-            <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-              <a href="#" className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                <span className="sr-only">Previous</span>
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
-                </svg>
-              </a>
-              <a href="#" aria-current="page" className="relative z-10 inline-flex items-center bg-primary-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">1</a>
-              <a href="#" className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                <span className="sr-only">Next</span>
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
-                </svg>
-              </a>
-            </nav>
+        </div>
+      )}
+
+      {/* Rider Detail Modal */}
+      {isDetailOpen && detailRider && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-50 flex items-center justify-center" onClick={() => setIsDetailOpen(false)}>
+          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Rider Details</h3>
+              <button onClick={() => setIsDetailOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div className="mt-4 space-y-2 text-sm text-gray-700">
+              <p><span className="font-medium">ID:</span> {detailRider.rider_id}</p>
+              <p><span className="font-medium">Name:</span> {detailRider.full_name}</p>
+              <p><span className="font-medium">Email:</span> {detailRider.email}</p>
+              <p><span className="font-medium">Phone:</span> {detailRider.phone || detailRider.phone_number}</p>
+              <p><span className="font-medium">Vehicle:</span> {detailRider.vehicle_type}</p>
+              <p><span className="font-medium">Status:</span> {detailRider.status}</p>
+              {typeof detailRider.rating !== 'undefined' && (
+                <p><span className="font-medium">Rating:</span> {Number(detailRider.rating)?.toFixed(1)}</p>
+              )}
+            </div>
+            <div className="mt-6 text-right">
+              <button onClick={() => setIsDetailOpen(false)} className="px-4 py-2 rounded-md bg-gray-100 text-gray-800 hover:bg-gray-200">Close</button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <h3 className="text-lg font-medium text-gray-900">Delete Rider</h3>
+              <div className="mt-2 px-7 py-3">
+                <p className="text-sm text-gray-500">
+                  Are you sure you want to delete {selectedRider?.full_name}? This action cannot be undone.
+                </p>
+              </div>
+              <div className="flex justify-center space-x-3 pt-4">
+                <button
+                  onClick={() => setShowDeleteDialog(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                >
+                  {isLoading ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Block/Unblock Confirmation Dialog */}
+      {showBlockDialog && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <h3 className="text-lg font-medium text-gray-900">
+                {selectedRider?.is_blocked ? 'Unblock' : 'Block'} Rider
+              </h3>
+              <div className="mt-2 px-7 py-3">
+                <p className="text-sm text-gray-500">
+                  Are you sure you want to {selectedRider?.is_blocked ? 'unblock' : 'block'} {selectedRider?.full_name}?
+                </p>
+              </div>
+              <div className="flex justify-center space-x-3 pt-4">
+                <button
+                  onClick={() => setShowBlockDialog(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBlock}
+                  disabled={isLoading}
+                  className={`px-4 py-2 rounded-md text-white disabled:opacity-50 ${
+                    selectedRider?.is_blocked 
+                      ? 'bg-green-600 hover:bg-green-700' 
+                      : 'bg-red-600 hover:bg-red-700'
+                  }`}
+                >
+                  {isLoading ? 'Processing...' : (selectedRider?.is_blocked ? 'Unblock' : 'Block')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

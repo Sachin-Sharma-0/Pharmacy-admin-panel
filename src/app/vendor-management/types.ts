@@ -1,21 +1,21 @@
 // Define interfaces for vendor management
 
 export interface Vendor {
-  id: number;
-  name: string;
+  vendor_id: string;
+  full_name: string;
   email: string;
-  phone: string;
-  onboardingDate: string;
-  businessName: string;
-  businessEmail: string;
-  businessPhone: string;
+  phone_number: string;
+  created_at: string;
+  business_name: string;
+  business_email: string;
+  business_phone: string;
   address: string;
-  totalProducts: number;
-  status: 'approved' | 'on_hold' | 'suspended';
-  isBlocked: boolean;
+  total_products: number;
+  status: 'approved' | 'pending' | 'on_hold' | 'rejected';
+  is_blocked: boolean;
 }
 
 export interface StatusOption {
-  value: 'approved' | 'on_hold' | 'suspended';
+  value: 'approved' | 'pending' | 'on_hold' | 'rejected';
   label: string;
 }

@@ -1,44 +1,95 @@
 "use client";
-import React from 'react';
-import { Bars3Icon, BellIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import React, { useEffect, useRef, useState } from 'react';
+import { Bell, ChevronDown, Menu } from 'lucide-react';
+import LogoutButton from '../common/LogoutButton';
+import Link from 'next/link';
 
 interface HeaderProps {
-  setSidebarOpen?: (open: boolean) => void;
+  setSidebarOpen: (open: boolean) => void;
 }
 
-export default function Header({ setSidebarOpen }: HeaderProps) {
+const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
   return (
-    <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-white shadow">
-      <button
-        type="button"
-        className="border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 md:hidden"
-        onClick={() => setSidebarOpen && setSidebarOpen(true)}
-      >
-        <span className="sr-only">Open sidebar</span>
-        <Bars3Icon className="h-6 w-6" aria-hidden="true" />
-      </button>
-      <div className="flex flex-1 justify-between items-center px-4">
-        <div className="flex flex-1 items-center">
-          <div className="flex w-full md:ml-0 md:max-w-md">
-            <div className="relative w-full">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </div>
-              <input
-                type="text"
-                className="block w-full rounded-md border-0 bg-white py-2 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-500 sm:text-sm"
-                placeholder="Search..."
-              />
-            </div>
-          </div>
-        </div>
-        <div className="ml-4 flex items-center md:ml-6">
+    <header className="sticky top-0 z-50 flex h-16 flex-shrink-0 bg-white shadow">
+      <div className="flex flex-1 justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center">
+          {/* Mobile menu button */}
           <button
             type="button"
-            className="rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            className="md:hidden -ml-0.5 -mt-0.5 inline-flex h-12 w-12 items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <span className="sr-only">Open sidebar</span>
+            <Menu className="h-6 w-6" aria-hidden="true" />
+          </button>
+
+          {/* Brand Logo */}
+          <div className="flex items-center">
+            <h1 className="text-3xl font-pacifico text-[#41AFFF] ml-2">Oraglan</h1>
+            <h1 className="text-l font-pacifico text-[#41AFFF] font-bold ml-3 mt-3">Admin Panel</h1>
+          </div>
+        </div>
+
+        <div className="flex items-center">
+          {/* Logout Button */}
+          <div className="mr-4">
+            <LogoutButton />
+          </div>
+          
+          {/* Notification bell */}
+          <button
+            type="button"
+            className="relative rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
             <span className="sr-only">View notifications</span>
-            <BellIcon className="h-6 w-6" aria-hidden="true" />
+            <Bell className="h-6 w-6" aria-hidden="true" />
+            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
+          </button>
+
+          {/* Profile dropdown */}
+          <div className="relative ml-3">
+            <ProfileMenu />
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+
+  return (
+    <header className="sticky top-0 z-50 flex h-16 flex-shrink-0 bg-white shadow">
+      <div className="flex flex-1 justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center">
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            className="md:hidden -ml-0.5 -mt-0.5 inline-flex h-12 w-12 items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <span className="sr-only">Open sidebar</span>
+            <Menu className="h-6 w-6" aria-hidden="true" />
+          </button>
+
+          {/* Brand Logo */}
+          <div className="flex items-center">
+            <h1 className="text-3xl font-pacifico text-[#41AFFF] ml-2">Oraglan</h1>
+            <h1 className="text-l font-pacifico text-[#41AFFF] font-bold ml-3 mt-3">Admin Panel</h1>
+          </div>
+        </div>
+
+        <div className="flex items-center">
+          {/* Logout Button */}
+          <div className="mr-4">
+            <LogoutButton />
+          </div>
+          
+          {/* Notification bell */}
+          <button
+            type="button"
+            className="relative rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            <span className="sr-only">View notifications</span>
+            <Bell className="h-6 w-6" aria-hidden="true" />
+            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
           </button>
 
           {/* Profile dropdown */}
@@ -46,8 +97,10 @@ export default function Header({ setSidebarOpen }: HeaderProps) {
             <div>
               <button
                 type="button"
-                className="flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                className="flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 id="user-menu-button"
+                aria-expanded="false"
+                aria-haspopup="true"
               >
                 <span className="sr-only">Open user menu</span>
                 <img
@@ -55,11 +108,66 @@ export default function Header({ setSidebarOpen }: HeaderProps) {
                   src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                   alt=""
                 />
+                <span className="ml-2 hidden md:flex items-center">
+                  <span className="text-sm font-medium text-gray-700">John Doe</span>
+                  <ChevronDown className="ml-1 h-4 w-4 text-gray-400" aria-hidden="true" />
+                </span>
               </button>
             </div>
           </div>
         </div>
       </div>
+    </header>
+  );
+};
+
+export default Header;
+
+const ProfileMenu: React.FC = () => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (ref.current && !ref.current.contains(target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        className="flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        id="user-menu-button"
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="sr-only">Open user menu</span>
+        <img
+          className="h-8 w-8 rounded-full"
+          src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+          alt=""
+        />
+        <span className="ml-2 hidden md:flex items-center">
+          <span className="text-sm font-medium text-gray-700">John Doe</span>
+          <ChevronDown className="ml-1 h-4 w-4 text-gray-400" aria-hidden="true" />
+        </span>
+      </button>
+      {open && (
+        <div className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
+          <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</Link>
+          <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Settings</Link>
+          <div className="px-2 py-1">
+            <LogoutButton />
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+};

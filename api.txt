@@ -1,0 +1,459 @@
+Example API Url: https://api.oraglan.com/api/users/login
+
+
+### Admin Login
+- **Endpoint:** `POST /api/admin/login`
+- **Description:** Authenticates an admin and returns a JWT token.
+- **Access:** Public
+- **Request Body:**
+  ```json
+  {
+    "email": "admin@example.com",
+    "password": "password123"
+  }
+  ```
+- **Response:**
+  - **Success (200 OK)**
+    ```json
+    {
+      "success": true,
+      "message": "Admin logged in successfully",
+      "data": {
+        "token": "jwt_token"
+      }
+    }
+    ```
+
+### Get All Admins
+- **Endpoint:** `GET /api/admin/`
+- **Description:** Retrieves a list of all admins.
+- **Access:** Private (requires admin JWT token)
+- **Request Headers:**
+  ```
+  Authorization: Bearer <jwt_token>
+  ```
+- **Response:**
+  - **Success (200 OK)**
+    ```json
+    {
+      "success": true,
+      "message": "Admins retrieved successfully",
+      "data": {
+        "admins": [
+          {
+            "admin_id": "admin-uuid",
+            "full_name": "Admin User",
+            "email": "admin@example.com",
+            "phone_number": "+2339384758695",
+            "role": "admin",
+            "created_at": "2023-10-27T10:00:00Z"
+          }
+        ]
+      }
+    }
+    ```
+
+### Update an Admin
+- **Endpoint:** `PUT /api/admin/:adminId`
+- **Description:** Updates an admin's details.
+- **Access:** Private (requires admin JWT token)
+- **Request Headers:**
+  ```
+  Authorization: Bearer <jwt_token>
+  ```
+- **Request Body:**
+  ```json
+  {
+    "full_name": "Updated Admin Name"
+  }
+  ```
+- **Response:**
+  - **Success (200 OK)**
+    ```json
+    {
+      "success": true,
+      "message": "Admin updated successfully",
+      "data": {
+        "admin_id": "admin-uuid",
+        "full_name": "Updated Admin Name"
+      }
+    }
+    ```
+
+### Delete an Admin
+- **Endpoint:** `DELETE /api/admin/:adminId`
+- **Description:** Deletes an admin.
+- **Access:** Private (requires admin JWT token)
+- **Request Headers:**
+  ```
+  Authorization: Bearer <jwt_token>
+  ```
+- **Response:**
+  - **Success (200 OK)**
+    ```json
+    {
+      "success": true,
+      "message": "Admin deleted successfully"
+    }
+    ```
+
+### Get All Vendors (for Admin)
+- **Endpoint:** `GET /api/admin/vendors`
+- **Description:** Retrieves a list of all vendors.
+- **Access:** Private (requires admin JWT token)
+- **Request Headers:**
+  ```
+  Authorization: Bearer <jwt_token>
+  ```
+- **Response:**
+  - **Success (200 OK)**
+    ```json
+    {
+      "success": true,
+      "message": "Vendors retrieved successfully",
+      "data": {
+        "vendors": [
+          {
+            "vendor_id": "vendor-uuid",
+            "full_name": "Vendor Name",
+            "email": "vendor@example.com",
+            "phone_number": "+1234567890",
+            "approval_status": "approved",
+            "profile_completed": true,
+            "created_at": "2023-10-27T10:00:00Z"
+          }
+        ]
+      }
+    }
+    ```
+
+### Get Vendor Details (for Admin)
+- **Endpoint:** `GET /api/admin/vendors/:vendorId`
+- **Description:** Retrieves details for a specific vendor.
+- **Access:** Private (requires admin JWT token)
+- **Request Headers:**
+  ```
+  Authorization: Bearer <jwt_token>
+  ```
+- **Response:**
+  - **Success (200 OK)**
+    ```json
+    {
+      "success": true,
+      "message": "Vendor details retrieved successfully",
+      "data": {
+        "vendor": {
+          "vendor_id": "vendor-uuid",
+          "full_name": "Vendor Name",
+          "email": "vendor@example.com",
+          "phone_number": "+1234567890",
+          "approval_status": "approved",
+          "profile_completed": true,
+          "created_at": "2023-10-27T10:00:00Z"
+        }
+      }
+    }
+    ```
+
+### Update Vendor Details (for Admin)
+- **Endpoint:** `PUT /api/admin/vendors/:vendorId`
+- **Description:** Updates a vendor's details.
+- **Access:** Private (requires admin JWT token)
+- **Request Headers:**
+  ```
+  Authorization: Bearer <jwt_token>
+  ```
+- **Request Body:**
+  ```json
+  {
+    "full_name": "Updated Vendor Name",
+    "approval_status": "approved"
+  }
+  ```
+- **Response:**
+  - **Success (200 OK)**
+    ```json
+    {
+      "success": true,
+      "message": "Vendor details updated successfully",
+      "data": {
+        "vendor_id": "vendor-uuid",
+        "full_name": "Updated Vendor Name",
+        "approval_status": "approved"
+      }
+    }
+    ```
+
+### Get All Products (for Admin)
+- **Endpoint:** `GET /api/admin/products`
+- **Description:** Retrieves a list of all products.
+- **Access:** Private (requires admin JWT token)
+- **Request Headers:**
+  ```
+  Authorization: Bearer <jwt_token>
+  ```
+- **Response:**
+  - **Success (200 OK)**
+    ```json
+    {
+      "success": true,
+      "message": "Products retrieved successfully",
+      "data": {
+        "products": [
+          {
+            "product_id": "product-uuid",
+            "name": "Product Name",
+            "price": 100,
+            "vendor_id": "vendor-uuid"
+          }
+        ]
+      }
+    }
+    ```
+
+### Get Product Details (for Admin)
+- **Endpoint:** `GET /api/admin/products/:productId`
+- **Description:** Retrieves details for a specific product.
+- **Access:** Private (requires admin JWT token)
+- **Request Headers:**
+  ```
+  Authorization: Bearer <jwt_token>
+  ```
+- **Response:**
+  - **Success (200 OK)**
+    ```json
+    {
+      "success": true,
+      "message": "Product details retrieved successfully",
+      "data": {
+        "product": {
+          "product_id": "product-uuid",
+          "name": "Product Name",
+          "price": 100,
+          "vendor_id": "vendor-uuid"
+        }
+      }
+    }
+    ```
+
+### Create a New Product (for Admin)
+- **Endpoint:** `POST /api/admin/products/create`
+- **Description:** Creates a new product.
+- **Access:** Private (requires admin JWT token)
+- **Request Headers:**
+  ```
+  Authorization: Bearer <jwt_token>
+  ```
+- **Request Body:**
+  ```json
+  {
+    "name": "New Product by Admin",
+    "description": "Product description.",
+    "price": 200,
+    "category_id": 1,
+    "vendor_id": "vendor-uuid",
+    "stock_quantity": 100
+  }
+  ```
+- **Response:**
+  - **Success (201 Created)**
+    ```json
+    {
+      "success": true,
+      "message": "Product created successfully",
+      "data": {
+        "product_id": "new-product-uuid"
+      }
+    }
+    ```
+
+### Update a Product (for Admin)
+- **Endpoint:** `PUT /api/admin/products/:productId`
+- **Description:** Updates a product's details.
+- **Access:** Private (requires admin JWT token)
+- **Request Headers:**
+  ```
+  Authorization: Bearer <jwt_token>
+  ```
+- **Request Body:**
+  ```json
+  {
+    "name": "Updated Product Name by Admin",
+    "price": 220
+  }
+  ```
+- **Response:**
+  - **Success (200 OK)**
+    ```json
+    {
+      "success": true,
+      "message": "Product updated successfully",
+      "data": {
+        "product_id": "product-uuid"
+      }
+    }
+    ```
+
+### Delete a Product (for Admin)
+- **Endpoint:** `DELETE /api/admin/products/:productId`
+- **Description:** Deletes a product.
+- **Access:** Private (requires admin JWT token)
+- **Request Headers:**
+  ```
+  Authorization: Bearer <jwt_token>
+  ```
+- **Response:**
+  - **Success (200 OK)**
+    ```json
+    {
+      "success": true,
+      "message": "Product deleted successfully"
+    }
+    ```
+
+### Get All Riders (for Admin)
+- **Endpoint:** `GET /api/admin/riders`
+- **Description:** Retrieves a list of all riders.
+- **Access:** Private (requires admin JWT token)
+- **Request Headers:**
+  ```
+  Authorization: Bearer <jwt_token>
+  ```
+- **Response:**
+  - **Success (200 OK)**
+    ```json
+    {
+      "success": true,
+      "message": "Riders retrieved successfully",
+      "data": {
+        "riders": [
+          {
+            "rider_id": "rider-uuid",
+            "full_name": "Rider Name",
+            "email": "rider@example.com",
+            "phone": "+1234567890"
+          }
+        ]
+      }
+    }
+    ```
+
+### Update Rider Details (for Admin)
+- **Endpoint:** `PUT /api/admin/riders/:riderId`
+- **Description:** Updates a rider's details.
+- **Access:** Private (requires admin JWT token)
+- **Request Headers:**
+  ```
+  Authorization: Bearer <jwt_token>
+  ```
+- **Request Body:**
+  ```json
+  {
+    "full_name": "Updated Rider Name"
+  }
+  ```
+- **Response:**
+  - **Success (200 OK)**
+    ```json
+    {
+      "success": true,
+      "message": "Rider details updated successfully",
+      "data": {
+        "rider_id": "rider-uuid"
+      }
+    }
+    ```
+
+### Get Rider Details (Admin)
+- **Endpoint:** `GET /api/admin/riders/:riderId`
+- **Description:** Get rider details
+- **Access:** Admin (requires JWT token)
+- **URL Parameters:**
+  - `riderId` (UUID): ID of the rider to retrieve
+- **Response:**
+  - Success (200 OK)
+    ```json
+    {
+      "success": true,
+      "message": "Rider details retrieved successfully",
+      "data": {
+        "rider": {
+          "rider_id": "uuid",
+          "full_name": "Rider Name",
+          "email": "rider@example.com",
+          "phone": "1234567890",
+          "privacy_terms_accepted": true,
+          "terms_conditions_accepted": true,
+          "status": "active",
+          "is_online": true,
+          "working_status": "online",
+          "rating": 4.5,
+          "joining_date": "2023-01-01T00:00:00Z",
+          "profile_photo": "https://example.com/photo.jpg",
+          "government_id": "https://example.com/id.jpg",
+          "driving_license": "https://example.com/license.jpg",
+          "gender": "male",
+          "date_of_birth": "1990-01-01",
+          "address": "123 Main St",
+          "city": "City",
+          "state": "State",
+          "country": "Country",
+          "pincode": "123456",
+          "vehicle_photo": "https://example.com/vehicle.jpg",
+          "vehicle_number": "ABC123",
+          "vehicle_type": "motorcycle"
+        }
+      }
+    }
+    ```
+
+### Update Rider (Admin)
+- **Endpoint:** `PUT /api/admin/riders/:riderId`
+- **Description:** Update rider details
+- **Access:** Admin (requires JWT token)
+- **URL Parameters:**
+  - `riderId` (UUID): ID of the rider to update
+- **Request Parameters:**
+  ```json
+  {
+    "fullName": "Updated Rider Name",
+    "email": "updated@example.com",
+    "phone": "9876543210",
+    "status": "active",
+    "vehicleType": "car",
+    "rating": 5.0
+  }
+  ```
+- **Response:**
+  - Success (200 OK)
+    ```json
+    {
+      "success": true,
+      "message": "Rider details updated successfully"
+    }
+    ```
+
+### Get All Categories
+- **Endpoint:** `GET /api/products/categories`
+- **Description:** Retrieves all product categories
+- **Access:** Public (no token required)
+- **Response:**
+  - Success (200 OK)
+    ```json
+    {
+      "success": true,
+      "message": "Categories retrieved successfully",
+      "data": [
+        {
+          "category_id": "uuid",
+          "category_name": "Medicine",
+          "category_description": "Pharmaceutical products"
+        },
+        {
+          "category_id": "uuid",
+          "category_name": "Supplements",
+          "category_description": "Dietary supplements"
+        }
+      ]
+    }
+    ```

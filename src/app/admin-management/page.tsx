@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import TableSkeleton from '@/components/ui/TableSkeleton';
 import { 
   PencilIcon, 
   TrashIcon,
@@ -8,15 +9,17 @@ import {
   PlusIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
+import { API_BASE_URL, getAuthToken } from '@/utils/env';
 
 // Define interfaces for type safety
 interface Admin {
-  id: number;
-  name: string;
+  admin_id: string;
+  full_name: string;
   email: string;
-  phone: string;
-  permissionRole: string;
-  status: string;
+  phone_number: string;
+  role: string;
+  created_at: string;
+  status?: string;
 }
 
 interface FormData {
@@ -27,49 +30,7 @@ interface FormData {
   permissionRole: string;
 }
 
-// Sample admin data
-const initialAdmins: Admin[] = [
-  { 
-    id: 1, 
-    name: 'John Admin', 
-    email: 'john@admin.com', 
-    phone: '+1 (555) 123-4567',
-    permissionRole: 'Super Admin',
-    status: 'active'
-  },
-  { 
-    id: 2, 
-    name: 'Sarah Manager', 
-    email: 'sarah@admin.com', 
-    phone: '+1 (555) 234-5678',
-    permissionRole: 'Vendor Manager',
-    status: 'active'
-  },
-  { 
-    id: 3, 
-    name: 'Michael Support', 
-    email: 'michael@admin.com', 
-    phone: '+1 (555) 345-6789',
-    permissionRole: 'Customer Support',
-    status: 'active'
-  },
-  { 
-    id: 4, 
-    name: 'Emily Finance', 
-    email: 'emily@admin.com', 
-    phone: '+1 (555) 456-7890',
-    permissionRole: 'Finance Manager',
-    status: 'disabled'
-  },
-  { 
-    id: 5, 
-    name: 'David Analytics', 
-    email: 'david@admin.com', 
-    phone: '+1 (555) 567-8901',
-    permissionRole: 'Analytics Manager',
-    status: 'active'
-  },
-];
+
 
 // Sample permission roles for dropdown
 const permissionRoles = [
@@ -83,16 +44,60 @@ const permissionRoles = [
 ];
 
 export default function AdminManagement() {
-  const [admins, setAdmins] = useState(initialAdmins);
+  const [admins, setAdmins] = useState<Admin[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentAdmin, setCurrentAdmin] = useState<Admin | null>(null);
-  const [formData, setFormData] = useState({
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
     phone: '',
     password: '',
     permissionRole: ''
   });
+  
+  // Fetch admins from API
+  useEffect(() => {
+    fetchAdmins();
+  }, []);
+  
+  const fetchAdmins = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const token = getAuthToken();
+      
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/api/admin/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        const rawAdmins = data.data.admins || [];
+        const hiddenEmails = new Set(['devteam@oraglan.com', 'sachin200215.ssb@gmail.com']);
+        const filtered = rawAdmins.filter((a: Admin) => !hiddenEmails.has(a.email));
+        setAdmins(filtered);
+      } else {
+        throw new Error(data.message || 'Failed to fetch admins');
+      }
+    } catch (err: any) {
+      console.error('Error fetching admins:', err);
+      setError(err.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Open modal for creating a new admin
   const openCreateModal = () => {
@@ -102,7 +107,7 @@ export default function AdminManagement() {
       email: '',
       phone: '',
       password: '',
-      permissionRole: ''
+      permissionRole: 'Super Admin'
     });
     setIsModalOpen(true);
   };
@@ -111,11 +116,11 @@ export default function AdminManagement() {
   const openUpdateModal = (admin: Admin): void => {
     setCurrentAdmin(admin);
     setFormData({
-      name: admin.name,
+      name: admin.full_name,
       email: admin.email,
-      phone: admin.phone,
+      phone: admin.phone_number,
       password: '',
-      permissionRole: admin.permissionRole
+      permissionRole: admin.role || 'Super Admin'
     });
     setIsModalOpen(true);
   };
@@ -135,31 +140,55 @@ export default function AdminManagement() {
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     
-    if (currentAdmin) {
-      // Update existing admin
-      setAdmins(admins.map(admin => 
-        admin.id === currentAdmin.id ? { ...admin, ...formData } : admin
-      ));
-    } else {
-      // Create new admin
-      const newAdmin = {
-        id: admins.length > 0 ? Math.max(...admins.map(a => a.id)) + 1 : 1,
-        ...formData,
-        status: 'active'
-      };
-      setAdmins([...admins, newAdmin]);
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+
+      if (currentAdmin) {
+        // Update existing admin
+        const response = await fetch(`${API_BASE_URL}/api/admin/${currentAdmin.admin_id}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            full_name: formData.name,
+            email: formData.email,
+            phone_number: formData.phone,
+            role: formData.permissionRole,
+            ...(formData.password && { password: formData.password })
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          await fetchAdmins(); // Refresh the list
+          closeModal();
+        } else {
+          throw new Error(data.message || 'Failed to update admin');
+        }
+      } else {
+        // Create new admin - Note: This endpoint might not exist in API, using placeholder
+        // You may need to implement a POST /api/admin/ endpoint
+        console.warn('Create admin endpoint not specified in API documentation');
+        closeModal();
+      }
+    } catch (err: any) {
+      console.error('Error submitting form:', err);
+      setError(err.message || 'An error occurred');
     }
-    
-    closeModal();
   };
 
   // Toggle admin status (enable/disable)
-  const toggleAdminStatus = (adminId: number): void => {
+  const toggleAdminStatus = (adminId: string): void => {
     setAdmins(admins.map(admin => 
-      admin.id === adminId ? { 
+      admin.admin_id === adminId ? { 
         ...admin, 
         status: admin.status === 'active' ? 'disabled' : 'active' 
       } : admin
@@ -167,9 +196,34 @@ export default function AdminManagement() {
   };
 
   // Delete an admin
-  const deleteAdmin = (adminId: number): void => {
-    if (window.confirm('Are you sure you want to delete this admin?')) {
-      setAdmins(admins.filter(admin => admin.id !== adminId));
+  const deleteAdmin = async (adminId: string): Promise<void> => {
+    if (!window.confirm('Are you sure you want to delete this admin?')) {
+      return;
+    }
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/admin/${adminId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchAdmins(); // Refresh the list
+      } else {
+        throw new Error(data.message || 'Failed to delete admin');
+      }
+    } catch (err: any) {
+      console.error('Error deleting admin:', err);
+      setError(err.message || 'An error occurred while deleting admin');
     }
   };
 
@@ -177,8 +231,8 @@ export default function AdminManagement() {
     <div className="space-y-6">
       <div className="sm:flex sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Admin Management</h1>
-          <p className="mt-2 text-sm text-gray-700">Manage admin users and their permission roles.</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Admin Management</h1>
+          <p className="mt-2 text-sm text-gray-500">Manage admin users and their permission roles.</p>
         </div>
         <div className="mt-4 sm:mt-0">
           <button
@@ -196,11 +250,11 @@ export default function AdminManagement() {
       <div className="mt-8 flex flex-col">
         <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+            <div className="overflow-visible shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
               <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">ID</th>
+                    <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">S. No.</th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Name</th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Phone</th>
@@ -210,25 +264,37 @@ export default function AdminManagement() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {admins.map((admin) => (
-                    <tr key={admin.id}>
+                  {isLoading ? (
+                    <TableSkeleton rows={6} cols={7} />
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-4 text-red-500">{error}</td>
+                    </tr>
+                  ) : admins.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-4">No admins found</td>
+                    </tr>
+                  ) : admins.map((admin, index) => (
+                    <tr key={admin.admin_id}>
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                        {admin.id}
+                        {index + 1}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {admin.name}
+                        {admin.full_name}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {admin.email}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {admin.phone}
+                        {admin.phone_number}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {admin.permissionRole}
+                        {admin.role}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm">
-                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${admin.status === 'active' ? 'bg-[#41AFFF]/20 text-[#41AFFF]' : 'bg-red-100 text-red-800'}`}>
+                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
+                          admin.status === 'active' ? 'bg-[#41AFFF]/20 text-[#41AFFF]' : 'bg-red-100 text-red-800'
+                        }`}>
                           {admin.status === 'active' ? 'Active' : 'Disabled'}
                         </span>
                       </td>
@@ -244,7 +310,7 @@ export default function AdminManagement() {
                           
                           {/* Enable/Disable button */}
                           <button
-                            onClick={() => toggleAdminStatus(admin.id)}
+                            onClick={() => toggleAdminStatus(admin.admin_id)}
                             className={`${admin.status === 'disabled' ? 'text-[#41AFFF] hover:text-[#3a9ee6]' : 'text-red-600 hover:text-red-900'}`}
                           >
                             {admin.status === 'disabled' ? 'Enable' : 'Disable'}
@@ -252,7 +318,7 @@ export default function AdminManagement() {
                           
                           {/* Delete button */}
                           <button
-                            onClick={() => deleteAdmin(admin.id)}
+                            onClick={() => deleteAdmin(admin.admin_id)}
                             className="text-red-600 hover:text-red-900"
                           >
                             <TrashIcon className="h-5 w-5" aria-hidden="true" />
@@ -272,11 +338,11 @@ export default function AdminManagement() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-screen items-end justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={closeModal}></div>
+            <div className="fixed inset-0 modal-backdrop transition-opacity" aria-hidden="true" onClick={closeModal}></div>
 
             <span className="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
 
-            <div className="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle z-50 relative">
+            <div className="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom modal-content transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle z-50 relative">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">

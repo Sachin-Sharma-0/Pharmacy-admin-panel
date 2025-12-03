@@ -1,26 +1,82 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+const BASE_URL = 'https://api.oraglan.com';
 
 interface UserData {
   name: string;
   email: string;
   role: string;
   avatar?: string;
+  phone?: string;
+  last_login?: string;
 }
 
 export default function UserProfile() {
-  // In a real application, this would be fetched from an API or context
   const [userData, setUserData] = useState<UserData>({
-    name: 'Admin User',
-    email: 'admin@example.com',
-    role: 'Administrator',
+    name: '',
+    email: '',
+    role: '',
     avatar: '/avatar-placeholder.png'
   });
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(userData);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
+  
+  // Fetch user data on component mount
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+  
+  const fetchUserData = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+      
+      const response = await fetch(`${BASE_URL}/api/admin/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+      
+      const data = await response.json();
+      const profile = data.data || data;
+      
+      setUserData({
+        name: profile.name || profile.full_name || '',
+        email: profile.email || '',
+        role: profile.role || 'Administrator',
+        avatar: profile.avatar || '/avatar-placeholder.png',
+        phone: profile.phone || profile.phone_number || '',
+        last_login: profile.last_login || new Date().toISOString()
+      });
+      
+      setFormData({
+        name: profile.name || profile.full_name || '',
+        email: profile.email || '',
+        role: profile.role || 'Administrator',
+        avatar: profile.avatar || '/avatar-placeholder.png',
+        phone: profile.phone || profile.phone_number || '',
+        last_login: profile.last_login || new Date().toISOString()
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Error fetching user data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -34,195 +90,213 @@ export default function UserProfile() {
     e.preventDefault();
     setIsLoading(true);
     setSuccessMessage('');
+    setError(null);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
       
-      // Update user data
+      const response = await fetch(`${BASE_URL}/api/admin/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+      
       setUserData(formData);
       setIsEditing(false);
-      setSuccessMessage('Profile updated successfully');
-    } catch (error) {
-      console.error('Error updating profile:', error);
+      setSuccessMessage('Profile updated successfully!');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while updating profile');
+      console.error('Error updating profile:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-      <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div>
-          <h3 className="text-lg leading-6 font-medium text-gray-900">User Profile</h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">Personal details and account settings</p>
+    <div className="bg-white shadow rounded-lg p-6">
+      {isLoading && !isEditing ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
-        {!isEditing && (
-          <button
-            type="button"
-            onClick={() => setIsEditing(true)}
-            className="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-          >
-            Edit Profile
-          </button>
-        )}
-      </div>
+      ) : (
+        <>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold text-gray-800">My Profile</h2>
+            {!isEditing && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                Edit Profile
+              </button>
+            )}
+          </div>
 
-      {successMessage && (
-        <div className="mx-4 my-2 rounded-md bg-green-50 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
+          {successMessage && (
+            <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
+              {successMessage}
             </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-green-800">{successMessage}</p>
+          )}
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+              {error}
+            </div>
+          )}
+
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="md:w-1/3 flex flex-col items-center">
+              <div className="w-32 h-32 rounded-full overflow-hidden mb-4">
+                <img
+                  src={userData.avatar || '/avatar-placeholder.png'}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {isEditing && (
+                <button type="button" className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors">
+                  Change Avatar
+                </button>
+              )}
+            </div>
+
+            <div className="md:w-2/3">
+              {isEditing ? (
+                <form onSubmit={handleSubmit}>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone || ''}
+                        onChange={handleChange}
+                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Role
+                      </label>
+                      <input
+                        type="text"
+                        name="role"
+                        value={formData.role}
+                        className="w-full p-2 border border-gray-300 rounded bg-gray-100"
+                        disabled
+                      />
+                    </div>
+
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? 'Saving...' : 'Save Changes'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditing(false);
+                          setFormData(userData);
+                        }}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Full Name</h3>
+                    <p className="text-lg text-gray-800">{userData.name}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                    <p className="text-lg text-gray-800">{userData.email}</p>
+                  </div>
+
+                  {userData.phone && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Phone Number</h3>
+                      <p className="text-lg text-gray-800">{userData.phone}</p>
+                    </div>
+                  )}
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Role</h3>
+                    <p className="text-lg text-gray-800">{userData.role}</p>
+                  </div>
+
+                  {userData.last_login && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Last Login</h3>
+                      <p className="text-lg text-gray-800">
+                        {new Date(userData.last_login).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        </>
       )}
-
-      <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-        {isEditing ? (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-6 gap-6">
-              <div className="col-span-6 sm:col-span-3">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full name</label>
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                />
-              </div>
-
-              <div className="col-span-6 sm:col-span-3">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email address</label>
-                <input
-                  type="email"
-                  name="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                />
-              </div>
-
-              <div className="col-span-6 sm:col-span-3">
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
-                <select
-                  id="role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
-                >
-                  <option>Administrator</option>
-                  <option>Manager</option>
-                  <option>Editor</option>
-                  <option>Viewer</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsEditing(false);
-                  setFormData(userData);
-                }}
-                className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
-              >
-                {isLoading ? 'Saving...' : 'Save'}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-center sm:space-x-6 space-y-4 sm:space-y-0">
-              <div className="flex-shrink-0">
-                <div className="relative">
-                  <img
-                    className="h-24 w-24 rounded-full object-cover border-4 border-primary-100"
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                    alt="User avatar"
-                  />
-                  <span className="absolute inset-0 rounded-full shadow-inner" aria-hidden="true"></span>
-                </div>
-              </div>
-              <div className="text-center sm:text-left">
-                <h3 className="text-xl font-bold text-primary-800">{userData.name}</h3>
-                <p className="text-sm font-medium text-gray-500">{userData.email}</p>
-                <div className="mt-2 flex justify-center sm:justify-start space-x-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Active
-                  </span>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {userData.role}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-200 pt-5">
-              <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 bg-gray-50 p-4 rounded-lg">
-                <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">Full name</dt>
-                  <dd className="mt-1 text-sm text-gray-900 font-semibold">{userData.name}</dd>
-                </div>
-                <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">Email address</dt>
-                  <dd className="mt-1 text-sm text-gray-900 font-semibold">{userData.email}</dd>
-                </div>
-                <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">Role</dt>
-                  <dd className="mt-1 text-sm text-gray-900 font-semibold">{userData.role}</dd>
-                </div>
-                <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">Last login</dt>
-                  <dd className="mt-1 text-sm text-gray-900 font-semibold">{new Date().toLocaleDateString()}</dd>
-                </div>
-              </dl>
-            </div>
-
-            <div className="border-t border-gray-200 pt-5">
-              <h3 className="text-lg font-medium text-gray-900">Account Security</h3>
-              <div className="mt-3 space-y-4 bg-gray-50 p-4 rounded-lg">
-                <div>
-                  <button
-                    type="button"
-                    className="inline-flex items-center px-3 py-2 border border-primary-300 shadow-sm text-sm font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    Change password
-                  </button>
-                </div>
-                <div>
-                  <button
-                    type="button"
-                    className="text-sm text-primary-600 hover:text-primary-500"
-                  >
-                    Enable two-factor authentication
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

@@ -23,6 +23,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-poppins), sans-serif;
+  overflow-x: hidden; /* Prevent horizontal scrollbar */
 }
 
 /* Increase width of text fields throughout the admin panel */
@@ -36,6 +37,72 @@ textarea,
 select {
   min-width: 250px !important;
   width: 100% !important;
+  color: #333 !important; /* Darker text color for inputs */
+}
+
+/* Ensure placeholder text is visible */
+::placeholder {
+  color: #666 !important;
+  opacity: 1 !important;
+}
+
+/* Fix for Edge browser */
+:-ms-input-placeholder {
+  color: #666 !important;
+  opacity: 1 !important;
+}
+
+/* Fix for Internet Explorer */
+::-ms-input-placeholder {
+  color: #666 !important;
+  opacity: 1 !important;
+}
+
+/* Make icons darker for better visibility */
+.text-gray-400, .opacity-80 {
+  color: #555 !important;
+  opacity: 1 !important;
+}
+
+/* Fix for dark theme in Edge browser */
+@media (prefers-color-scheme: dark) {
+  input, select, textarea, button {
+    color-scheme: light !important;
+  }
+  
+  input::placeholder,
+  textarea::placeholder,
+  select,
+  .text-gray-400,
+  .opacity-80,
+  .text-gray-500,
+  .text-gray-600,
+  .text-gray-700 {
+    color: #555 !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Modal styling with blur background */
+.modal-backdrop {
+  backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+.modal-content {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Fix main content scrolling */
+.overflow-y-auto {
+  overflow-y: auto;
+  max-height: 100%;
+  overscroll-behavior: contain; /* Prevent scroll chaining */
+}
+
+/* Fix for Edge browser overscroll */
+html, body {
+  overscroll-behavior: none; /* Prevent overscroll in Edge */
 }
 
 /* Ensure brand name uses Pacifico font */

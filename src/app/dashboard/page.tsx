@@ -236,12 +236,12 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* Analytics Section Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-gray-900">Dashboard Overview</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">Dashboard Overview</h2>
       </div>
       
       {/* Customer Analytics */}
       <div>
-        <h3 className="text-lg font-medium text-gray-800 mb-3">Customer Analytics</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-3">Customer Analytics</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {customerStats.map((stat) => (
             <StatCard key={stat.name} stat={stat} />
@@ -251,7 +251,7 @@ export default function Dashboard() {
       
       {/* Vendor Analytics */}
       <div>
-        <h3 className="text-lg font-medium text-gray-800 mb-3">Vendor Analytics</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-3">Vendor Analytics</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {vendorStats.map((stat) => (
             <StatCard key={stat.name} stat={stat} />
